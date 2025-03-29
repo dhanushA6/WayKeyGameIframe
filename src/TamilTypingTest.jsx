@@ -11,11 +11,12 @@ import convertToTamil from "./components/utlis/convertToTamil";
 import levelContent from "./components/data/levelContent";
 import phoneticMap from "./components/data/phoneticMap.json";
 import "./Responsive.css";
-import KeyHint from "./components/Keyhint";  
+import KeyHint from "./components/KeyHint";  
 import keyBoardLabel from "./components/data/keyBoardLabel"; 
 import SpecialKey from "./components/data/SpecialKey"; 
 import shiftMap from "./components/data/shiftMap";
-import RealtimeMetrics from "./components/RealtimeMetrics ";
+import RealtimeMetrics from "./components/RealtimeMetrics "; 
+import PauseResumeOverlay  from "./components/Pause"
 
 
 const TamilTypingTest = () => {
@@ -25,13 +26,16 @@ const TamilTypingTest = () => {
   const [shiftOn, setShiftOn] = useState(false);
   const [inputText, setInputText] = useState("");
   const [tamilText, setTamilText] = useState("");
-  const [timeLeft, setTimeLeft] = useState(1800);
+  const [timeLeft, setTimeLeft] = useState(500);
   const [gameActive, setGameActive] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
   const [expectedKeys, setExpectedKeys] = useState([]);
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
   const [highlightedKey, setHighlightedKey] = useState("");
-  const [wrongKeyPressed, setWrongKeyPressed] = useState("");
+  const [wrongKeyPressed, setWrongKeyPressed] = useState(""); 
+
+  const [isPaused, setIsPaused] = useState(false);
+
 
   const [correctTamilChars, setCorrectTamilChars] = useState(0);
   const [errorTamilChars, setErrorTamilChars] = useState(0);
@@ -68,6 +72,42 @@ const TamilTypingTest = () => {
       startTimeRef.current = Date.now();
     }
   }, [gameActive]);
+  
+
+  const handlePause = () => {
+    setIsPaused(true);
+    clearInterval(timerRef.current); // Stop the timer
+  };
+
+   
+  // Function to resume the game
+const handleResume = () => {
+  setIsPaused(false);
+  
+  // Restart the timer where it left off
+  if (gameActive) {
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          finishSection();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+  
+  // Re-focus the input field
+  inputRef.current?.focus();
+}; 
+
+const handleExitLevel = () => {
+  setIsPaused(false);
+  resetGameState();
+  // Additional logic if needed to return to level selection
+};
+
+
 
    // Add a new useEffect to calculate real-time metrics
    useEffect(() => {
@@ -202,7 +242,7 @@ const TamilTypingTest = () => {
   // Physical keyboard handlers
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (!gameActive) return;
+      if (!gameActive || isPaused) return; // Don't process keys when paused
 
       e.preventDefault();
       if (e.key === "Backspace") {
@@ -225,16 +265,15 @@ const TamilTypingTest = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [gameActive, shiftOn, currentKeyIndex, expectedKeys]);
+  }, [gameActive, isPaused, shiftOn, currentKeyIndex, expectedKeys]);
 
   // Focus management
   useEffect(() => {
     if (gameActive) inputRef.current?.focus();
   }, [gameActive]);
 
-  // Timer management
   useEffect(() => {
-    if (gameActive) {
+    if (gameActive && !isPaused) { // Only run timer when not paused
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -246,7 +285,9 @@ const TamilTypingTest = () => {
       }, 1000);
     }
     return () => clearInterval(timerRef.current);
-  }, [gameActive]);
+  }, [gameActive, isPaused]); // Add isPaused to dependencies
+
+
 
   // Game logic functions
   const processKeyPress = (pressedKey) => {
@@ -514,16 +555,21 @@ const TamilTypingTest = () => {
   };
 
   const finishSection = () => {
-    const timeElapsed = selectedTime - timeLeft;
-
+    // Convert time from seconds to minutes for WPM calculation
+    const timeElapsedInMinutes = (selectedTime - timeLeft) / 60;
+  
     // Calculate Tamil character based metrics
     const totalTamilChars = tamilCharMap.length;
-    const tamilWPM =
-      Math.round((correctTamilChars / 5) * (60 / timeElapsed)) || 0;
-    const tamilCPM = Math.round(correctTamilChars * (60 / timeElapsed)) || 0;
-    const tamilAccuracy =
-      Math.round((correctTamilChars / totalTamilCharsTyped) * 100) || 0;
-
+    const tamilWPM = timeElapsedInMinutes > 0 
+      ? Math.round((correctTamilChars / 5) / timeElapsedInMinutes) || 0
+      : 0;
+    const tamilCPM = timeElapsedInMinutes > 0 
+      ? Math.round(correctTamilChars / timeElapsedInMinutes) || 0
+      : 0;
+    const tamilAccuracy = totalTamilCharsTyped > 0
+      ? Math.round((correctTamilChars / totalTamilCharsTyped) * 100) || 0
+      : 0;
+  
     setLevelMetrics({
       wpm: tamilWPM,
       cpm: tamilCPM,
@@ -533,24 +579,30 @@ const TamilTypingTest = () => {
       correctTamilChars,
       errorTamilChars,
     });
-
+  
     setGameActive(false);
     setSectionCompleted(true);
     setLevelCompleted(false);
     clearInterval(timerRef.current);
   };
-
+  
+  // Replace the finishLevel function with this corrected version
   const finishLevel = () => {
-    const timeElapsed = selectedTime - timeLeft;
-
+    // Convert time from seconds to minutes for WPM calculation
+    const timeElapsedInMinutes = (selectedTime - timeLeft) / 60;
+  
     // Calculate Tamil character based metrics
     const totalTamilChars = tamilCharMap.length;
-    const tamilWPM =
-      Math.round((correctTamilChars / 5) * (60 / timeElapsed)) || 0;
-    const tamilCPM = Math.round(correctTamilChars * (60 / timeElapsed)) || 0;
-    const tamilAccuracy =
-      Math.round((correctTamilChars / totalTamilCharsTyped) * 100) || 0;
-
+    const tamilWPM = timeElapsedInMinutes > 0 
+      ? Math.round((correctTamilChars / 5) / timeElapsedInMinutes) || 0
+      : 0;
+    const tamilCPM = timeElapsedInMinutes > 0 
+      ? Math.round(correctTamilChars / timeElapsedInMinutes) || 0
+      : 0;
+    const tamilAccuracy = totalTamilCharsTyped > 0
+      ? Math.round((correctTamilChars / totalTamilCharsTyped) * 100) || 0
+      : 0;
+  
     setLevelMetrics({
       wpm: tamilWPM,
       cpm: tamilCPM,
@@ -560,7 +612,7 @@ const TamilTypingTest = () => {
       correctTamilChars,
       errorTamilChars,
     });
-
+  
     setGameActive(false);
     setLevelCompleted(true);
     setSectionCompleted(false);
@@ -573,7 +625,7 @@ const TamilTypingTest = () => {
     clearTimeout(keyFeedbackTimerRef.current);
     keyFeedbackTimerRef.current = setTimeout(
       () => setKeyFeedback({ key: "", status: "" }),
-      1000
+      600
     );
   };
 
@@ -613,7 +665,7 @@ const TamilTypingTest = () => {
     setGameComplete(false);
     setLevelCompleted(false);
     setSectionCompleted(false);
-    setTimeLeft(180000); // Use selected time
+    setTimeLeft(500); // Use selected time
     setCorrectKeysPressed(0); 
     setErrorCount(0); 
     setCurrentLevel(currentLevel);
@@ -651,7 +703,8 @@ const TamilTypingTest = () => {
     }
   };
 
-  const retryLevel = () => {
+  const retryLevel = () => { 
+    setIsPaused(false);
     if (sectionCompleted) {
       // Retry current section
       resetSectionState();
@@ -663,6 +716,21 @@ const TamilTypingTest = () => {
     }
     // startGame();
   };
+
+  const retrySection = () => { 
+    setIsPaused(false);
+    if (sectionCompleted) {
+      // Retry current section
+      resetSectionState();
+    } else {
+      // Retry entire level
+      resetGameState();
+      setCurrentSectionIndex(0);
+      setCurrentItemIndex(0);
+    }
+    // startGame();
+  };
+
 
   const resetSectionState = () => {
     setInputText("");
@@ -787,85 +855,95 @@ const TamilTypingTest = () => {
   };
 
  
-  return (
-    <div className="tamil-typing-test">
-      {!levelCompleted && !sectionCompleted && !gameComplete && (
-        <div className="game-container">
-          {gameActive && (
-            <RealtimeMetrics
-              realtimeWPM={realtimeWPM}
-              realtimeCPM={realtimeCPM}
-              realtimeAccuracy={realtimeAccuracy}
-              timeLeft={timeLeft}
-              selectedTime={selectedTime}
-              setSelectedTime={setSelectedTime}
-              gameActive={gameActive}
-            />
-          )}
-          
-          {gameActive && (
-            <>
-              <TargetWord
-                currentLevel={currentLevel}
-                currentItem={getCurrentContent()}
-                currentKeyIndex={currentKeyIndex}
-                itemJustCompleted={itemJustCompleted}
-                paragraphFeedback={paragraphFeedback}
-                sectionTitle={getCurrentSectionTitle()}
-              />
-              
-              <KeyHint
-                tamilCharMap={tamilCharMap}
-                currentKeyIndex={currentKeyIndex}
-                highlightedKey={highlightedKey}
-              />
-              
-              <InputArea
-                inputText={inputText}
-                tamilText={tamilText}
-                inputRef={inputRef}
-              />
-              
-              {(currentLevel <= 3) && (
-                <Keyboard
-                  keys={keyBoardLabel}
-                  highlightedKey={highlightedKey}
-                  keyFeedback={keyFeedback}
-                  renderKey={renderKey}
-                />
-              )}
-            </>
-          )}
-          
-          <GameControls
-            onStart={startGame}
-            onRetry={retryLevel}
-            onNextLevel={proceedToNextLevel}
-            levelCompleted={levelCompleted}
-            accuracy={levelMetrics?.accuracy}
-            currentLevel={currentLevel}
-            currentSection={currentSectionIndex}
-            levelContent={levelContent}
+ return (
+  <div className="tamil-typing-test">
+    {!levelCompleted && !sectionCompleted && !gameComplete && (
+      <div className="game-container">
+        {gameActive && !isPaused && (
+          <RealtimeMetrics
+            realtimeWPM={realtimeWPM}
+            realtimeCPM={realtimeCPM}
+            realtimeAccuracy={realtimeAccuracy}
+            timeLeft={timeLeft}
+            selectedTime={selectedTime}
+            setSelectedTime={setSelectedTime}
             gameActive={gameActive}
           />
-        </div>
-      )}
-  
-      {(levelCompleted || sectionCompleted) && (
-        <LevelResults
-          {...levelMetrics}
-          currentLevel={currentLevel}
-          section={currentSectionIndex}
-          islevelcompleted={levelCompleted}
-          levelContent={levelContent}
+        )}
+        
+        {gameActive && (
+          <PauseResumeOverlay 
+            isPaused={isPaused}
+            onPause={handlePause}
+            onResume={handleResume}
+            onRestart={retryLevel}
+            onExit={handleExitLevel}
+          />
+        )}
+        
+        {gameActive && !isPaused && (
+          <>
+            <TargetWord
+              currentLevel={currentLevel}
+              currentItem={getCurrentContent()}
+              currentKeyIndex={currentKeyIndex}
+              itemJustCompleted={itemJustCompleted}
+              paragraphFeedback={paragraphFeedback}
+              sectionTitle={getCurrentSectionTitle()}
+            />
+            
+            <KeyHint
+              tamilCharMap={tamilCharMap}
+              currentKeyIndex={currentKeyIndex}
+              highlightedKey={highlightedKey}
+            />
+            
+            <InputArea
+              inputText={inputText}
+              tamilText={tamilText}
+              inputRef={inputRef}
+            />
+            
+            {(currentLevel <= 3) && (
+              <Keyboard
+                keys={keyBoardLabel}
+                highlightedKey={highlightedKey}
+                keyFeedback={keyFeedback}
+                renderKey={renderKey}
+              />
+            )}
+          </>
+        )}
+    {       
+       !isPaused && (  <GameControls
           onStart={startGame}
           onRetry={retryLevel}
           onNextLevel={proceedToNextLevel}
-          onNextSection={proceedToNextSection}
-        />
-      )}
-    </div>
-  );
+          levelCompleted={levelCompleted}
+          accuracy={levelMetrics?.accuracy}
+          currentLevel={currentLevel}
+          currentSection={currentSectionIndex}
+          levelContent={levelContent}
+          gameActive={gameActive && !isPaused}
+        />)}
+      </div>
+    )}
+
+    {(levelCompleted || sectionCompleted) && (
+      <LevelResults
+        {...levelMetrics}
+        currentLevel={currentLevel}
+        section={currentSectionIndex}
+        islevelcompleted={levelCompleted}
+        levelContent={levelContent}
+        onStart={startGame}
+        onRetry={retryLevel}
+        onNextLevel={proceedToNextLevel}
+        onNextSection={proceedToNextSection}
+      />
+    )}
+  </div>
+);
 }; 
 
 export default TamilTypingTest

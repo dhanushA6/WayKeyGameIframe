@@ -23,7 +23,7 @@ const HomePage = () => {
         <div className="help-logo" onClick={handleHelp}></div>
       </div> 
        <div className="white-box-overlay">
-          <p>இது ஒரு தமிழ் வாக்கியம்.</p> {/* Replace with your Tamil sentence */}
+          {/* <p>இது ஒரு தமிழ் வாக்கியம்.</p> Replace with your Tamil sentence */}
         </div>
     </div>
   );

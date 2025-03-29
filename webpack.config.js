@@ -8,7 +8,7 @@ const printCompilationMessage = require("./compilation.config.js");
 
 module.exports = (_, argv) => ({
   output: {
-    publicPath: "http://localhost:8091/",
+    publicPath: "",
     clean: true, // Ensure the output directory is cleaned before each build
   },
 

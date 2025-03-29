@@ -44,8 +44,8 @@ const GameControls = ({
   
   // Get section title and level title if available
   const getLevelTitle = () => {
-    if (!levelContent || !levelContent[currentLevel - 1]) return `Level ${currentLevel}`;
-    return levelContent[currentLevel - 1].title || `Level ${currentLevel}`;
+    if (!levelContent || !levelContent[currentLevel - 1]) return `கடினம் ${currentLevel}`;
+    return levelContent[currentLevel - 1].title || `கடினம் ${currentLevel}`;
   };
   
   const getSectionTitle = () => {
@@ -75,7 +75,7 @@ const GameControls = ({
             </div>
             
             <button className="start-button" onClick={onStart}>
-              Start Game
+            தொடங்கு
             </button>
           </div>
         </div>
@@ -83,7 +83,7 @@ const GameControls = ({
       
       {levelCompleted && (
         <button className="start-button" onClick={onStart}>
-          Start Game
+         தொடங்கு
         </button>
       )}
     </div>

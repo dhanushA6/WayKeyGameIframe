@@ -6,7 +6,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-image: url("C:\Users\dhanu\OneDrive\Documents\Intern\Template\src\images\LandingPage.jpg");
+    background-image: url("../images/LandingPage.jpg");
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
@@ -22,15 +22,17 @@
   .start-gif1 {
     width: 200px;
     height: 200px;
-    background-image: url("C:\Users\dhanu\OneDrive\Documents\Intern\Template\src\images\game-control.gif");
+    background-image: url("../images/game-control.gif");
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    cursor: pointer;
+    cursor: pointer; 
+    transition: transform 0.2s, box-shadow 0.2s;
+
   }
   
   .help-logo {
-    background-image: url("C:\Users\dhanu\OneDrive\Documents\Intern\Template\src\images\helper.gif");
+    background-image: url("../images/helper.gif");
     background-size: contain; /* Ensures the GIF fits within the element */
     background-repeat: no-repeat; /* Prevents the GIF from repeating */
     background-position: center; /* Centers the GIF within the element */
@@ -40,6 +42,7 @@
     width: 50px; /* Set the width of the element */
     height: 50px; /* Set the height of the element */
     cursor: pointer;
+
   }
   
   .white-box-overlay {

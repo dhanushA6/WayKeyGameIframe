@@ -18,13 +18,20 @@ const KeyHint = ({ tamilCharMap, currentKeyIndex, highlightedKey }) => {
 
   return (
     <div className="key-hint">
-      <p>
-        <span className="highlighted-key">{currentChar.tamilChar}</span>
-        <span style={{ margin: "0 10px" }} > ➔ <span className="highlighted-key">{engKeys}</span> </span>
-                
-      </p>
+      {currentChar.tamilChar === " " ? (
+        <p>
+          <span className="highlighted-key"> Press Space </span>
+        </p>
+      ) : (
+        <p>
+          <span className="highlighted-key">{currentChar.tamilChar}</span>
+          <span style={{ margin: "0 10px" }}>
+            {" "}
+            ➔ <span className="highlighted-key">{engKeys}</span>{" "}
+          </span>
+        </p>
+      )}
     </div>
   );
 };
-
 export default KeyHint;
